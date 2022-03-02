@@ -1,5 +1,6 @@
 module Parser 
     (   Parser(..),
+        EltParser(..),
         parseAnd,
         parseAndWith,
         parseAnyChar,
@@ -9,11 +10,17 @@ module Parser
         parseMany,
         parseSome,
         parseTuple,
-        parseOr) where
+        parseOr,
+        parseCons) where
 
+import Element
 
 data Parser a = Parser {
     runParser :: String -> Maybe (a, String)
+}
+
+data EltParser a = EltParser {
+    runEltParser :: [Element] -> Maybe (a, [Element])
 }
 
 parseChar:: Char -> Parser Char
@@ -129,3 +136,22 @@ parseTuple parser = Parser $ \s -> case runParser getTuple s of
         else Just (parsed, rest)
            where
                Just (parsed, s1) = runParser (parseofTuples parser) tuple
+
+checkCons :: EltParser [Element]
+checkCons = EltParser $ \s -> case s of
+    [] -> Nothing
+    elements ->
+        if (head elements) == OpenCons then Just ([Cons (result)] ++ result1, rest1)
+        else
+            if (head elements) == CloseCons then Just ([], (tail elements))
+            else  Just (([head elements] ++ result), rest)
+            where
+                Just (result, rest) = runEltParser checkCons (tail elements)
+                Just (result1, rest1) = runEltParser checkCons rest
+
+parseCons :: [Element] -> [Element]
+parseCons elements | length elements == 0 = elements
+                   | head elements == OpenCons = Cons result : parseCons rest
+                   | otherwise = (head elements) : (parseCons $ tail elements)
+                   where
+                       Just (result, rest) = runEltParser checkCons (tail elements)

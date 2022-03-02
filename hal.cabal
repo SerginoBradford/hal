@@ -25,14 +25,19 @@ source-repository head
 
 library
   exposed-modules:
+      Element
+      Evaluation
+      Functions
       Lib
       Parser
+      Tools
   other-modules:
       Paths_hal
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , haskeline
   default-language: Haskell2010
 
 executable hal-exe
